@@ -1,4 +1,3 @@
-
 /** RFC 8785 (JCS) canonical JSON bytes hashed -> policyHash */
 export type PolicyHash = `sha256:${string}`;
 export type PolicyId = string;
@@ -68,18 +67,18 @@ export interface OutputClaimSpec {
   unit?: Unit;
 
   derive:
-  | { kind: "PASS_FAIL" }
-  | { kind: "SCORE" }
-  | {
-    kind: "BAND";
-    from: "SCORE";
-    bands: Array<{
-      label: string;
-      minInclusive: number;
-      maxExclusive: number;
-    }>;
-  }
-  | { kind: "CONST"; value: string | number | boolean };
+    | { kind: "PASS_FAIL" }
+    | { kind: "SCORE" }
+    | {
+        kind: "BAND";
+        from: "SCORE";
+        bands: Array<{
+          label: string;
+          minInclusive: number;
+          maxExclusive: number;
+        }>;
+      }
+    | { kind: "CONST"; value: string | number | boolean };
 }
 
 /**
@@ -99,24 +98,22 @@ export interface PublicPolicySpec {
   validity: ValiditySpec;
   disclosure: DisclosureSpec;
 
-  /**
-   * The "policyHash" MUST be computed over the corresponding PrivatePolicySpec
-   * using RFC8785 canonicalization + sha256 (recommended).
-   */
   integrity: {
     canonicalization: "RFC8785";
     policyHash: PolicyHash;
-    /** Optional: pin the evaluator implementation */
     codeRef?: CodeRef;
   };
 }
 
+/**
+ * Data sources are intentionally extensible.
+ * Keep this JSON-serializable; avoid secrets here (store refs/hashes instead).
+ */
 export type DataSourceRef = {
-  kind: string;                    // e.g. "http", "snowflake"
-  ref?: string;                     // optional opaque pointer
-  config?: Record<string, unknown>; // optional configuration of the datasource, e.g. hashed connection credentials, database name, table name, etc.
+  kind: string; // e.g. "http", "snowflake"
+  ref?: string;
+  config?: Record<string, unknown>;
 };
-
 
 export type AggregationSpec =
   | { op: "latest" }
@@ -144,10 +141,5 @@ export interface InputSpec {
   valueType: InputValueType;
   unit?: Unit;
   time: TimeWindowSpec;
-
-  /**
-   * Strong recommendation: required, so every InputSpec deterministically
-   * produces one scalar FeatureValue.
-   */
-  aggregation: AggregationSpec;
+  aggregation: AggregationSpec; // recommended required
 }
