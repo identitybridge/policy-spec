@@ -1,3 +1,4 @@
+
 /** RFC 8785 (JCS) canonical JSON bytes hashed -> policyHash */
 export type PolicyHash = `sha256:${string}`;
 export type PolicyId = string;
@@ -67,18 +68,18 @@ export interface OutputClaimSpec {
   unit?: Unit;
 
   derive:
-    | { kind: "PASS_FAIL" }
-    | { kind: "SCORE" }
-    | {
-        kind: "BAND";
-        from: "SCORE";
-        bands: Array<{
-          label: string;
-          minInclusive: number;
-          maxExclusive: number;
-        }>;
-      }
-    | { kind: "CONST"; value: string | number | boolean };
+  | { kind: "PASS_FAIL" }
+  | { kind: "SCORE" }
+  | {
+    kind: "BAND";
+    from: "SCORE";
+    bands: Array<{
+      label: string;
+      minInclusive: number;
+      maxExclusive: number;
+    }>;
+  }
+  | { kind: "CONST"; value: string | number | boolean };
 }
 
 /**
@@ -108,4 +109,45 @@ export interface PublicPolicySpec {
     /** Optional: pin the evaluator implementation */
     codeRef?: CodeRef;
   };
+}
+
+export type DataSourceRef = {
+  kind: string;                    // e.g. "http", "snowflake"
+  ref?: string;                     // optional opaque pointer
+  config?: Record<string, unknown>; // optional configuration of the datasource, e.g. hashed connection credentials, database name, table name, etc.
+};
+
+
+export type AggregationSpec =
+  | { op: "latest" }
+  | { op: "min" | "max" | "avg" | "sum" }
+  | { op: "count" }
+  | { op: "p50" | "p90" | "p95" | "p99" }
+  | { op: "distinctCount" }
+  | { op: "windowedRate"; per: Duration };
+
+export type InputValueType = "number" | "string" | "boolean";
+
+export type TimeWindowSpec =
+  | { mode: "point"; at: ISODateTime }
+  | { mode: "range"; start: ISODateTime; end: ISODateTime }
+  | { mode: "relative"; lookback: Duration; endOffset?: Duration };
+
+/**
+ * Policy input = "a scalar feature after applying time window + aggregation".
+ * Keyed by `id` (also used by Expr refs and featuresHash inputsUsed map).
+ */
+export interface InputSpec {
+  id: string;
+  source: DataSourceRef;
+  signal: string;
+  valueType: InputValueType;
+  unit?: Unit;
+  time: TimeWindowSpec;
+
+  /**
+   * Strong recommendation: required, so every InputSpec deterministically
+   * produces one scalar FeatureValue.
+   */
+  aggregation: AggregationSpec;
 }
