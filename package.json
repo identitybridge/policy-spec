@@ -1,0 +1,13 @@
+{
+  "name": "@identity-bridge/policy-spec",
+  "version": "0.1.0",
+  "files": ["dist", "README.md", "LICENSE"],
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
